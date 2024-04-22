@@ -4,6 +4,7 @@ use rustemon::pokemon::pokemon::get_by_id;
 
 
 
+
 async fn get_pokemon_by_id(id: i64) -> pokemon::Pokemon {
     let rustemon_client = rustemon::client::RustemonClient::default();
     let pokemon = get_by_id(id, &rustemon_client).await;
@@ -33,9 +34,23 @@ async fn get_pokemon_generations(pokemon: pokemon::Pokemon) -> Vec<String> {
     return generations_list;
 }
 
+async fn get_abilities(pokemon: pokemon::Pokemon) -> Vec<String> {
+    let abilities: Vec<String> = pokemon.abilities.iter()
+        .filter(|abiliti| !abiliti.is_hidden)
+        .map(|ability| ability.ability.name.to_string())
+        .collect();
+    return abilities;
+}
 
+async fn get_hidden_abilities(pokemon: pokemon::Pokemon) -> Vec<String> {
+    let hidden_abilities: Vec<String> = pokemon.abilities.iter()
+        .filter(|ability| ability.is_hidden)
+        .map(|ability| ability.ability.name.to_string())
+        .collect();
+    return hidden_abilities;
+}
 
-fn main() {
+fn get_data(id: i64) ->  (String, i64, i64, Vec<String>, Vec<String>, Vec<String>){
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(4)
         .enable_all()
@@ -43,7 +58,7 @@ fn main() {
         .unwrap();
 
     let pokemon = runtime.block_on(async {
-        get_pokemon_by_id(1).await
+        get_pokemon_by_id(id).await
     });
 
     let pokemon_name = runtime.block_on(async {
@@ -62,8 +77,36 @@ fn main() {
         get_pokemon_generations(pokemon.clone()).await
     });
 
-    println!("The name of the Pokemon is: {}", pokemon_name);
-    println!("The weight of {} is: {}", pokemon_name, pokemon_weight);
-    println!("The height of {} is: {}", pokemon_name, pokemon_height);
-    println!("The generations of {} are: {:?}", pokemon_name, pokemon_generations);
+    let pokemon_abilities = runtime.block_on(async {
+        get_abilities(pokemon.clone()).await
+    });
+
+    let pokemon_hidden_abilities = runtime.block_on(async {
+        get_hidden_abilities(pokemon.clone()).await
+    });
+
+    return (pokemon_name, pokemon_weight, pokemon_height, pokemon_generations, pokemon_abilities, pokemon_hidden_abilities); 
+}
+
+fn main() {
+    let mut id:i64   = 768;
+
+    while id <= 768 {
+        let (pokemon_name, pokemon_weight, pokemon_height, pokemon_generations, pokemon_abilities, pokemon_hidden_abilities) = get_data(id);
+        println!("The name of the id:{} is: {}",id ,pokemon_name);
+        println!("");
+        println!("The weight of {} is: {}", pokemon_name, pokemon_weight);
+        println!("");
+        println!("The height of {} is: {}", pokemon_name, pokemon_height);
+        println!("");
+        println!("The generations of {} are: {:?}", pokemon_name, pokemon_generations);
+        println!("");
+        println!("The abilities of {} are: {:?}", pokemon_name, pokemon_abilities);
+        println!("");
+        println!("The hidden abilities of {} are: {:?}", pokemon_name, pokemon_hidden_abilities);
+        println!("");
+        println!("------------------------------------------------------------");
+        id += 1;
+    }
+
 }
