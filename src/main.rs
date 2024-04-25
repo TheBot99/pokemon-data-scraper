@@ -1,5 +1,7 @@
 use rustemon::model::pokemon;
 use rustemon::pokemon::pokemon::get_by_id;
+use serde_json::json;
+use sqlite;
 use std::env;
 use tokio;
 
@@ -178,7 +180,7 @@ fn get_data(id: i64) -> PokemonData {
     };
 }
 
-fn print_data(pokemon_data: PokemonData) {
+fn print_data(pokemon_data: &PokemonData) {
     println!(
         "The name of the id:{} is: {}",
         pokemon_data.id, pokemon_data.name
@@ -241,6 +243,52 @@ fn print_data(pokemon_data: PokemonData) {
     println!("------------------------------------------------------------");
 }
 
+fn store_in_sqlite(pokemon_data: PokemonData) -> Result<(), sqlite::Error> {
+    let connection = sqlite::open("poke-db.sqlite")?;
+    // Convert the Vec<String> to a JSON string before storing
+    let generations_json = json!(pokemon_data.generations).to_string();
+    let abilities_json = json!(pokemon_data.abilities).to_string();
+    let hidden_abilities_json = json!(pokemon_data.hidden_abilities).to_string();
+    let types_json = json!(pokemon_data.types).to_string();
+    let base_stats_json = json!(pokemon_data.base_stats).to_string();
+
+    let init_table_query = "CREATE TABLE IF NOT EXISTS pokemon (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        weight INTEGER,
+        height INTEGER,
+        generations TEXT,
+        abilities TEXT,
+        hidden_abilities TEXT,
+        types TEXT,
+        base_stats TEXT,
+        front_sprite_default TEXT,
+        front_sprite_shiny TEXT,
+        front_female_sprite_default TEXT,
+        front_female_sprite_shiny TEXT
+    )";
+
+    connection.execute(init_table_query).unwrap();
+
+    let insert_data_query = format!("INSERT OR REPLACE INTO pokemon (id, name, weight, height, generations, abilities, hidden_abilities, types, base_stats, front_sprite_default, front_sprite_shiny, front_female_sprite_default, front_female_sprite_shiny) VALUES ({}, '{}', {}, {}, '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')", 
+        pokemon_data.id, 
+        pokemon_data.name, 
+        pokemon_data.weight, 
+        pokemon_data.height, 
+        generations_json, 
+        abilities_json, 
+        hidden_abilities_json, 
+        types_json, 
+        base_stats_json, 
+        pokemon_data.front_sprite_default, 
+        pokemon_data.front_sprite_shiny, 
+        pokemon_data.front_female_sprite_default, 
+        pokemon_data.front_female_sprite_shiny);
+    connection.execute(insert_data_query).unwrap();
+
+    Ok(()) // Return Ok(()) to match the expected return type
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut id: i64 = 1;
@@ -262,7 +310,8 @@ fn main() {
 
     while id <= max_id {
         let pokemon_data = get_data(id);
-        print_data(pokemon_data);
+        print_data(&pokemon_data);
+        store_in_sqlite(pokemon_data).expect("Error storing data in sqlite");
         id += 1;
     }
 }

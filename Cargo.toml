@@ -7,4 +7,6 @@ edition = "2021"
 
 [dependencies]
 rustemon = "3.4.0" 
+serde_json = "1.0.116"
+sqlite = "0.35.0"
 tokio = { version = "1.0", features = ["full"] }
