@@ -1,126 +1,14 @@
-use rustemon::model::pokemon;
-use rustemon::pokemon::pokemon::get_by_id;
-use serde_json::json;
-use sqlite;
+mod get_pokemon_data_functions;
+use get_pokemon_data_functions::{
+    get_abilities, get_base_stats, get_front_female_sprite_default, get_front_female_sprite_shiny,
+    get_front_sprite_default, get_front_sprite_shiny, get_hidden_abilities, get_pokemon_by_id,
+    get_pokemon_generations, get_pokemon_height, get_pokemon_name, get_pokemon_weight, get_types,
+};
+mod store_and_print;
 use std::env;
 use tokio;
-
-struct PokemonData {
-    id: i64,
-    name: String,
-    weight: i64,
-    height: i64,
-    generations: Vec<String>,
-    abilities: Vec<String>,
-    hidden_abilities: Vec<String>,
-    types: Vec<String>,
-    base_stats: Vec<String>,
-    front_sprite_default: String,
-    front_sprite_shiny: String,
-    front_female_sprite_default: String,
-    front_female_sprite_shiny: String,
-}
-
-async fn get_pokemon_by_id(id: i64) -> pokemon::Pokemon {
-    let rustemon_client = rustemon::client::RustemonClient::default();
-    let pokemon = get_by_id(id, &rustemon_client).await;
-    return pokemon.unwrap();
-}
-
-async fn get_pokemon_name(pokemon: pokemon::Pokemon) -> String {
-    return pokemon.name;
-}
-
-async fn get_pokemon_weight(pokemon: pokemon::Pokemon) -> i64 {
-    return pokemon.weight;
-}
-
-async fn get_pokemon_height(pokemon: pokemon::Pokemon) -> i64 {
-    return pokemon.height;
-}
-
-async fn get_pokemon_generations(pokemon: pokemon::Pokemon) -> Vec<String> {
-    let generations: std::collections::HashSet<String> = pokemon
-        .moves
-        .iter()
-        .flat_map(|mv| mv.version_group_details.iter())
-        .map(|detail| {
-            detail
-                .version_group
-                .name
-                .split("-")
-                .next()
-                .unwrap()
-                .to_string()
-        })
-        .collect();
-    let generations_list: Vec<String> = generations.into_iter().map(|s| s.to_string()).collect();
-    return generations_list;
-}
-
-async fn get_abilities(pokemon: pokemon::Pokemon) -> Vec<String> {
-    let abilities: Vec<String> = pokemon
-        .abilities
-        .iter()
-        .filter(|abiliti| !abiliti.is_hidden)
-        .map(|ability| ability.ability.name.to_string())
-        .collect();
-    return abilities;
-}
-
-async fn get_hidden_abilities(pokemon: pokemon::Pokemon) -> Vec<String> {
-    let hidden_abilities: Vec<String> = pokemon
-        .abilities
-        .iter()
-        .filter(|ability| ability.is_hidden)
-        .map(|ability| ability.ability.name.to_string())
-        .collect();
-    return hidden_abilities;
-}
-
-async fn get_types(pokemon: pokemon::Pokemon) -> Vec<String> {
-    let types: Vec<String> = pokemon
-        .types
-        .iter()
-        .map(|type_| type_.type_.name.to_string())
-        .collect();
-    return types;
-}
-
-async fn get_base_stats(pokemon: pokemon::Pokemon) -> Vec<String> {
-    let base_stats: Vec<String> = pokemon
-        .stats
-        .iter()
-        .map(|stat| stat.base_stat.to_string())
-        .collect();
-    return base_stats;
-}
-
-async fn get_front_sprite_default(pokemon: pokemon::Pokemon) -> Option<String> {
-    let front_sprite_default = pokemon.sprites.front_default;
-    return front_sprite_default;
-}
-
-async fn get_front_sprite_shiny(pokemon: pokemon::Pokemon) -> Option<String> {
-    let front_sprite_shiny = pokemon.sprites.front_shiny;
-    return front_sprite_shiny;
-}
-
-async fn get_front_female_sprite_default(pokemon: pokemon::Pokemon) -> Option<String> {
-    let front_female_sprite_default = pokemon.sprites.front_female;
-    if front_female_sprite_default == None {
-        return Some("No female sprite default found.".to_string());
-    }
-    return front_female_sprite_default;
-}
-
-async fn get_front_female_sprite_shiny(pokemon: pokemon::Pokemon) -> Option<String> {
-    let front_female_sprite_shiny = pokemon.sprites.front_shiny_female;
-    if front_female_sprite_shiny == None {
-        return Some("No female sprite shiny found.".to_string());
-    }
-    return front_female_sprite_shiny;
-}
+mod pokemon_data;
+use pokemon_data::PokemonData;
 
 fn get_data(id: i64) -> PokemonData {
     let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -160,6 +48,12 @@ fn get_data(id: i64) -> PokemonData {
 
     let pokemon_front_female_sprite_shiny =
         runtime.block_on(async { get_front_female_sprite_shiny(pokemon.clone()).await });
+    let mut has_pokemon_female_form = true;
+    if pokemon_front_female_sprite_default == Some("No female sprite default found.".to_string()) {
+        has_pokemon_female_form = false;
+    }
+
+    let moves = get_pokemon_data_functions::get_pokemon_moves(pokemon.clone());
 
     return PokemonData {
         id: id,
@@ -177,119 +71,13 @@ fn get_data(id: i64) -> PokemonData {
             .expect("No front female sprite default found."),
         front_female_sprite_shiny: pokemon_front_female_sprite_shiny
             .expect("No front female sprite shiny found."),
+        has_female_form: has_pokemon_female_form,
+        moves: moves,
     };
 }
 
-fn print_data(pokemon_data: &PokemonData) {
-    println!(
-        "The name of the id:{} is: {}",
-        pokemon_data.id, pokemon_data.name
-    );
-    println!("");
-    println!(
-        "The weight of {} is: {}",
-        pokemon_data.name, pokemon_data.weight
-    );
-    println!("");
-    println!(
-        "The height of {} is: {}",
-        pokemon_data.name, pokemon_data.height
-    );
-    println!("");
-    println!(
-        "The generations of {} are: {:?}",
-        pokemon_data.name, pokemon_data.generations
-    );
-    println!("");
-    println!(
-        "The abilities of {} are: {:?}",
-        pokemon_data.name, pokemon_data.abilities
-    );
-    println!("");
-    println!(
-        "The hidden abilities of {} are: {:?}",
-        pokemon_data.name, pokemon_data.hidden_abilities
-    );
-    println!("");
-    println!(
-        "The types of {} are: {:?}",
-        pokemon_data.name, pokemon_data.types
-    );
-    println!("");
-    println!(
-        "The base stats of {} are: {:?}",
-        pokemon_data.name, pokemon_data.base_stats
-    );
-    println!("");
-    println!(
-        "The front sprite default of {} is: {}",
-        pokemon_data.name, pokemon_data.front_sprite_default
-    );
-    println!("");
-    println!(
-        "The front sprite shiny of {} is: {}",
-        pokemon_data.name, pokemon_data.front_sprite_shiny
-    );
-    println!("");
-    println!(
-        "The front sprite female default of {} is: {}",
-        pokemon_data.name, pokemon_data.front_female_sprite_default
-    );
-    println!("");
-    println!(
-        "The front sprite female shiny of {} is: {}",
-        pokemon_data.name, pokemon_data.front_female_sprite_shiny
-    );
-    println!("------------------------------------------------------------");
-}
-
-fn store_in_sqlite(pokemon_data: PokemonData) -> Result<(), sqlite::Error> {
-    let connection = sqlite::open("poke-db.sqlite")?;
-    // Convert the Vec<String> to a JSON string before storing
-    let generations_json = json!(pokemon_data.generations).to_string();
-    let abilities_json = json!(pokemon_data.abilities).to_string();
-    let hidden_abilities_json = json!(pokemon_data.hidden_abilities).to_string();
-    let types_json = json!(pokemon_data.types).to_string();
-    let base_stats_json = json!(pokemon_data.base_stats).to_string();
-
-    let init_table_query = "CREATE TABLE IF NOT EXISTS pokemon (
-        id INTEGER PRIMARY KEY,
-        name TEXT,
-        weight INTEGER,
-        height INTEGER,
-        generations TEXT,
-        abilities TEXT,
-        hidden_abilities TEXT,
-        types TEXT,
-        base_stats TEXT,
-        front_sprite_default TEXT,
-        front_sprite_shiny TEXT,
-        front_female_sprite_default TEXT,
-        front_female_sprite_shiny TEXT
-    )";
-
-    connection.execute(init_table_query).unwrap();
-
-    let insert_data_query = format!("INSERT OR REPLACE INTO pokemon (id, name, weight, height, generations, abilities, hidden_abilities, types, base_stats, front_sprite_default, front_sprite_shiny, front_female_sprite_default, front_female_sprite_shiny) VALUES ({}, '{}', {}, {}, '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')", 
-        pokemon_data.id, 
-        pokemon_data.name, 
-        pokemon_data.weight, 
-        pokemon_data.height, 
-        generations_json, 
-        abilities_json, 
-        hidden_abilities_json, 
-        types_json, 
-        base_stats_json, 
-        pokemon_data.front_sprite_default, 
-        pokemon_data.front_sprite_shiny, 
-        pokemon_data.front_female_sprite_default, 
-        pokemon_data.front_female_sprite_shiny);
-    connection.execute(insert_data_query).unwrap();
-
-    Ok(()) // Return Ok(()) to match the expected return type
-}
-
 fn main() {
+    store_and_print::initiate_new_csv_file();
     let args: Vec<String> = env::args().collect();
     let mut id: i64 = 1;
     let mut max_id: i64 = 1025;
@@ -310,8 +98,8 @@ fn main() {
 
     while id <= max_id {
         let pokemon_data = get_data(id);
-        print_data(&pokemon_data);
-        store_in_sqlite(pokemon_data).expect("Error storing data in sqlite");
+        store_and_print::write_pokemon_data(&pokemon_data);
+        store_and_print::print_data(&pokemon_data);
         id += 1;
     }
 }
