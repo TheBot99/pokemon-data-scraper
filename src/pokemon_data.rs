@@ -8,7 +8,7 @@ pub struct PokemonData {
     pub height: i64,
     pub generations: Vec<String>,
     pub abilities: Vec<String>,
-    pub hidden_abilities: Vec<String>,
+    pub hidden_ability: String,
     pub types: Vec<String>,
     pub base_stats: Vec<String>,
     pub front_sprite_default: String,
@@ -17,4 +17,5 @@ pub struct PokemonData {
     pub front_female_sprite_shiny: String,
     pub has_female_form: bool,
     pub moves: HashMap<String, HashMap<String, HashSet<(String, String)>>>,
+    pub evs: Vec<String>, // pub evolution_chain: Vec<(String, String, String)>,
 }
