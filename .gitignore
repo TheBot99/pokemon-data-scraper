@@ -2,3 +2,5 @@
 /http-cacache
 /pokemon_csv/*
 /pokemon_json/*
+/.idx
+/.vscode
