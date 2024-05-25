@@ -105,13 +105,18 @@ fn main() {
             }
         } else if arg == "--v" {
             verbose = true;
+        } else if arg == "--flush_json_dir" {
+            store_and_print::flush_json_dir();
+        } else if arg == "--flush_csv_dir" {
+            store_and_print::flush_csv_dir();
         }
     }
 
     while id <= max_id {
         let pokemon_data = get_data(id);
         store_and_print::initiate_new_csv_file(&pokemon_data);
-        store_and_print::write_pokemon_data(&pokemon_data);
+        store_and_print::write_pokemon_data_csv(&pokemon_data);
+        store_and_print::write_pokemon_data_json(&pokemon_data);
         if verbose {
             store_and_print::print_data(&pokemon_data);
         }

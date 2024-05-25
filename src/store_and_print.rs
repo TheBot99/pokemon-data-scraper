@@ -2,6 +2,8 @@ use crate::pokemon_data::PokemonData;
 use csv::Writer;
 use std::collections::HashSet;
 use std::fs::OpenOptions;
+use serde_json;
+use std::io::Write; // Import the std::io::Write trait
 
 fn get_moves_by_generation_and_type<'a>(
     pokemon_data: &'a PokemonData,
@@ -380,7 +382,7 @@ pub fn initiate_new_csv_file(pokemon_data: &PokemonData) {
     println!("------------------------------------------------------------");
 }
 
-pub fn write_pokemon_data(pokemon_data: &PokemonData) {
+pub fn write_pokemon_data_csv(pokemon_data: &PokemonData) {
     let file = OpenOptions::new()
         .write(true)
         .append(true)
@@ -564,5 +566,56 @@ pub fn write_pokemon_data(pokemon_data: &PokemonData) {
     writer.flush().unwrap();
 
     println!("Pokemon data written to CSV file successfully.");
+    println!("------------------------------------------------------------");
+}
+
+pub fn write_pokemon_data_json(pokemon_data: &PokemonData) {
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(&format!("pokemon_json/{}.json", pokemon_data.name))
+        .unwrap();
+
+    let json = serde_json::json!({
+        "id": pokemon_data.id,
+        "name": pokemon_data.name,
+        "weight": pokemon_data.weight,
+        "height": pokemon_data.height,
+        "generations": pokemon_data.generations,
+        "abilities": pokemon_data.abilities,
+        "hidden_ability": pokemon_data.hidden_ability,
+        "types": pokemon_data.types,
+        "base_stats": pokemon_data.base_stats,
+        "evs": pokemon_data.evs,
+        "front_sprite_default": pokemon_data.front_sprite_default,
+        "front_sprite_shiny": pokemon_data.front_sprite_shiny,
+        "front_female_sprite_default": pokemon_data.front_female_sprite_default,
+        "front_female_sprite_shiny": pokemon_data.front_female_sprite_shiny,
+        "moves": pokemon_data.moves,
+    });
+
+    let mut writer = std::io::BufWriter::new(file);
+    let formatted_json = serde_json::to_string_pretty(&json).unwrap();
+    writer.write_all(formatted_json.as_bytes()).unwrap();
+
+
+
+    println!("Pokemon data written to JSON file successfully.");
+    println!("------------------------------------------------------------");
+}
+
+pub fn flush_json_dir() {
+    let _ = std::fs::remove_dir_all("pokemon_json");
+    let _ = std::fs::create_dir("pokemon_json");
+
+    println!("JSON directory flushed successfully.");
+    println!("------------------------------------------------------------");
+}
+
+pub fn flush_csv_dir() {
+    let _ = std::fs::remove_dir_all("pokemon_csv");
+    let _ = std::fs::create_dir("pokemon_csv");
+
+    println!("CSV directory flushed successfully.");
     println!("------------------------------------------------------------");
 }
