@@ -17,5 +17,6 @@ pub struct PokemonData {
     pub front_female_sprite_shiny: String,
     pub has_female_form: bool,
     pub moves: HashMap<String, HashMap<String, HashSet<(String, String)>>>,
-    pub evs: Vec<String>, // pub evolution_chain: Vec<(String, String, String)>,
+    pub evs: Vec<String>,
+    pub evolution_chain_id: i64,
 }

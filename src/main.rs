@@ -1,11 +1,7 @@
 mod get_pokemon_data_functions;
 use get_pokemon_data_functions::{
-    get_abilities, get_base_stats, get_evs, get_front_female_sprite_default,
-    get_front_female_sprite_shiny, get_front_sprite_default, get_front_sprite_shiny,
-    get_hidden_ability, get_pokemon_by_id, get_pokemon_generations, get_pokemon_height,
-    get_pokemon_name, get_pokemon_weight, get_types,
+    get_abilities, get_base_stats, get_evolution_chain, get_evolution_chain_id, get_evs, get_front_female_sprite_default, get_front_female_sprite_shiny, get_front_sprite_default, get_front_sprite_shiny, get_hidden_ability, get_pokemon_by_id, get_pokemon_generations, get_pokemon_height, get_pokemon_name, get_pokemon_species_by_id, get_pokemon_weight, get_types
 };
-use rustemon::evolution::evolution_chain;
 
 mod store_and_print;
 use std::env;
@@ -20,73 +16,60 @@ fn get_data(id: i64) -> PokemonData {
         .build()
         .unwrap();
 
-    let pokemon = runtime.block_on(async { get_pokemon_by_id(id).await });
+        runtime.block_on(async {
+            let pokemon = get_pokemon_by_id(id).await;
+            let pokemon_species = get_pokemon_species_by_id(id).await;
+    
+            let pokemon_name = get_pokemon_name(pokemon.clone()).await;
+            let pokemon_weight = get_pokemon_weight(pokemon.clone()).await;
+            let pokemon_height = get_pokemon_height(pokemon.clone()).await;
+            let pokemon_generations = get_pokemon_generations(pokemon.clone()).await;
+            let pokemon_abilities = get_abilities(pokemon.clone()).await;
+            let pokemon_hidden_ability = get_hidden_ability(pokemon.clone()).await;
+            let pokemon_types = get_types(pokemon.clone()).await;
+            let pokemon_base_stats = get_base_stats(pokemon.clone()).await;
+            let pokemon_front_sprite_default = get_front_sprite_default(pokemon.clone()).await;
+            let pokemon_front_sprite_shiny = get_front_sprite_shiny(pokemon.clone()).await;
+            let pokemon_front_female_sprite_default = get_front_female_sprite_default(pokemon.clone()).await;
+            let pokemon_front_female_sprite_shiny = get_front_female_sprite_shiny(pokemon.clone()).await;
+            let mut has_pokemon_female_form = true;
+            if pokemon_front_female_sprite_default == Some("No female sprite default found.".to_string()) {
+                has_pokemon_female_form = false;
+            }
+            let moves = get_pokemon_data_functions::get_pokemon_moves(pokemon.clone());
+            let evs = get_evs(pokemon.clone()).await;
+            let evolution_chain = get_evolution_chain(pokemon_species.clone());
+            let evolution_chain_id = get_evolution_chain_id(evolution_chain.clone()).await;
+            
 
-    let pokemon_name = runtime.block_on(async { get_pokemon_name(pokemon.clone()).await });
-
-    let pokemon_weight = runtime.block_on(async { get_pokemon_weight(pokemon.clone()).await });
-
-    let pokemon_height = runtime.block_on(async { get_pokemon_height(pokemon.clone()).await });
-
-    let pokemon_generations =
-        runtime.block_on(async { get_pokemon_generations(pokemon.clone()).await });
-
-    let pokemon_abilities = runtime.block_on(async { get_abilities(pokemon.clone()).await });
-
-    let pokemon_hidden_ability =
-        runtime.block_on(async { get_hidden_ability(pokemon.clone()).await });
-
-    let pokemon_types = runtime.block_on(async { get_types(pokemon.clone()).await });
-
-    let pokemon_base_stats = runtime.block_on(async { get_base_stats(pokemon.clone()).await });
-
-    let pokemon_front_sprite_default =
-        runtime.block_on(async { get_front_sprite_default(pokemon.clone()).await });
-
-    let pokemon_front_sprite_shiny =
-        runtime.block_on(async { get_front_sprite_shiny(pokemon.clone()).await });
-
-    let pokemon_front_female_sprite_default =
-        runtime.block_on(async { get_front_female_sprite_default(pokemon.clone()).await });
-
-    let pokemon_front_female_sprite_shiny =
-        runtime.block_on(async { get_front_female_sprite_shiny(pokemon.clone()).await });
-    let mut has_pokemon_female_form = true;
-    if pokemon_front_female_sprite_default == Some("No female sprite default found.".to_string()) {
-        has_pokemon_female_form = false;
-    }
-
-    let evs = runtime.block_on(async { get_evs(pokemon.clone()).await });
-
-    let moves = get_pokemon_data_functions::get_pokemon_moves(pokemon.clone());
-    // let evolution_chain_details = runtime
-    //     .block_on(async { get_pokemon_data_functions::get_evolution_chain_details(pokemon).await });
-
-    return PokemonData {
-        id: id,
-        name: pokemon_name,
-        weight: pokemon_weight,
-        height: pokemon_height,
-        generations: pokemon_generations,
-        abilities: pokemon_abilities,
-        hidden_ability: pokemon_hidden_ability,
-        types: pokemon_types,
-        base_stats: pokemon_base_stats,
-        front_sprite_default: pokemon_front_sprite_default.expect("No front sprite default found."),
-        front_sprite_shiny: pokemon_front_sprite_shiny.expect("No front sprite shiny found."),
-        front_female_sprite_default: pokemon_front_female_sprite_default
-            .expect("No front female sprite default found."),
-        front_female_sprite_shiny: pokemon_front_female_sprite_shiny
-            .expect("No front female sprite shiny found."),
-        has_female_form: has_pokemon_female_form,
-        moves: moves,
-        evs: evs,
-        // evolution_chain: evolution_chain_details,
-    };
+            return PokemonData {
+                id: id,
+                name: pokemon_name,
+                weight: pokemon_weight,
+                height: pokemon_height,
+                generations: pokemon_generations,
+                abilities: pokemon_abilities,
+                hidden_ability: pokemon_hidden_ability,
+                types: pokemon_types,
+                base_stats: pokemon_base_stats,
+                front_sprite_default: pokemon_front_sprite_default.expect("No front sprite default found."),
+                front_sprite_shiny: pokemon_front_sprite_shiny.expect("No front sprite shiny found."),
+                front_female_sprite_default: pokemon_front_female_sprite_default
+                    .expect("No front female sprite default found."),
+                front_female_sprite_shiny: pokemon_front_female_sprite_shiny
+                    .expect("No front female sprite shiny found."),
+                has_female_form: has_pokemon_female_form,
+                moves: moves,
+                evs: evs,
+                evolution_chain_id: evolution_chain_id,
+            };
+        }
+    )
+    
 }
 
 fn main() {
-    print!("{esc}c", esc = 27 as char);
+    //print!("{esc}c", esc = 27 as char);
     let args: Vec<String> = env::args().collect();
     let mut id: i64 = 1;
     let mut max_id: i64 = 1025;

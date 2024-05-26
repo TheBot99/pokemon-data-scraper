@@ -92,6 +92,8 @@ pub fn print_data(pokemon_data: &PokemonData) {
         pokemon_data.name, pokemon_data.has_female_form
     );
     println!("");
+    println!("The evolution chain ID of {} is: {:?}", pokemon_data.name, pokemon_data.evolution_chain_id);
+    println!("");
     println!(
         "The generation-i egg moves of {} are: {:?}",
         pokemon_data.name,
@@ -339,6 +341,7 @@ pub fn initiate_new_csv_file(pokemon_data: &PokemonData) {
         "front sprite shiny",
         "front female sprite default",
         "front female sprite shiny",
+        "evolution_chain_id",
         "Gen 1 egg",
         "Gen 1 level up",
         "Gen 1 machine",
@@ -421,6 +424,7 @@ pub fn write_pokemon_data_csv(pokemon_data: &PokemonData) {
         &pokemon_data.front_sprite_shiny,
         &pokemon_data.front_female_sprite_default,
         &pokemon_data.front_female_sprite_shiny,
+        &pokemon_data.evolution_chain_id.to_string(),
         &format!(
             "{:?}",
             get_moves_by_generation_and_type(pokemon_data, "generation-i", "egg")
@@ -591,6 +595,7 @@ pub fn write_pokemon_data_json(pokemon_data: &PokemonData) {
         "front_sprite_shiny": pokemon_data.front_sprite_shiny,
         "front_female_sprite_default": pokemon_data.front_female_sprite_default,
         "front_female_sprite_shiny": pokemon_data.front_female_sprite_shiny,
+        "evolution_chain_id" : pokemon_data.evolution_chain_id,
         "moves": pokemon_data.moves,
     });
 

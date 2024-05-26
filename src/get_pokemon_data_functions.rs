@@ -1,6 +1,7 @@
-use rustemon::model::evolution;
 use rustemon::model::pokemon;
 use rustemon::model::pokemon::PokemonSpecies;
+use rustemon::model::evolution::EvolutionChain;
+use rustemon::model::resource::ApiResource;
 use rustemon::pokemon::pokemon::get_by_id;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -9,13 +10,6 @@ pub async fn get_pokemon_species_by_id(id: i64) -> PokemonSpecies {
     let rustemon_client = rustemon::client::RustemonClient::default();
     let pokemon_species = rustemon::pokemon::pokemon_species::get_by_id(id, &rustemon_client).await;
     return pokemon_species.unwrap();
-}
-
-pub async fn get_evolution_chain(id: i64) -> evolution::EvolutionChain {
-    let rustemon_client = rustemon::client::RustemonClient::default();
-    let evolution_chain =
-        rustemon::evolution::evolution_chain::get_by_id(id, &rustemon_client).await;
-    return evolution_chain.unwrap();
 }
 
 pub async fn get_pokemon_by_id(id: i64) -> pokemon::Pokemon {
@@ -180,50 +174,12 @@ pub async fn get_evs(pokemon: pokemon::Pokemon) -> Vec<String> {
     return evs;
 }
 
-pub async fn get_evolution_chain_id(pokemon: pokemon::Pokemon) -> i64 {
-    let species = tokio::runtime::Runtime::new().unwrap().block_on(async {
-        get_pokemon_species_by_id(
-            pokemon
-                .species
-                .url
-                .split("/")
-                .last()
-                .unwrap()
-                .parse()
-                .unwrap(),
-        )
-        .await
-    });
-    let url = species.evolution_chain.unwrap().url;
-    let url_parts: Vec<&str> = url.split('/').collect();
-    let evolution_chain_id: i64 = url_parts[url_parts.len() - 2].parse().unwrap();
-    evolution_chain_id
+pub fn get_evolution_chain(species : PokemonSpecies) -> ApiResource<EvolutionChain> {
+    species.evolution_chain.unwrap()
 }
 
-pub async fn get_evolution_chain_details(
-    pokemon: pokemon::Pokemon,
-) -> Vec<(String, String, String)> {
-    let evolution_chain_id = tokio::task::spawn_blocking(|| get_evolution_chain_id(pokemon))
-        .await
-        .unwrap();
-    let evolution_chain = get_evolution_chain(evolution_chain_id.await).await;
-    let mut evolution_details: Vec<(String, String, String)> = Vec::new();
-
-    let mut current_evolution = &evolution_chain.chain;
-
-    while let Some(evolution) = &current_evolution.evolves_to.first() {
-        let species_name = &current_evolution.species.name;
-        let evolves_to_name = &evolution.species.name;
-        let evolution_trigger = &evolution.evolution_details.first().unwrap().trigger.name;
-
-        evolution_details.push((
-            species_name.clone(),
-            evolves_to_name.clone(),
-            evolution_trigger.clone(),
-        ));
-
-        current_evolution = evolution;
-    }
-
-    evolution_details
+pub async fn get_evolution_chain_id(mut evo_chain : ApiResource<EvolutionChain>) -> i64 {
+    let evo_chain_id = evo_chain.url.split_off(42).replace("/", "").parse();
+    let evo_chain_id: i64 = evo_chain_id.unwrap();
+    return evo_chain_id;
 }
