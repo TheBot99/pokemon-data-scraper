@@ -4,6 +4,7 @@ use rustemon::model::pokemon::PokemonSpecies;
 use rustemon::model::resource::ApiResource;
 use rustemon::pokemon::pokemon::get_by_id;
 use rustemon::model::moves::Move;
+use rustemon::model::machines::Machine;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -23,6 +24,12 @@ async fn get_move_by_name(name: String) -> Move {
     let rustemon_client = rustemon::client::RustemonClient::default();
     let move_ = rustemon::moves::move_::get_by_name(&name, &rustemon_client).await;
     return move_.unwrap();
+}
+
+async fn get_machine_by_id(id: i64) -> Machine {
+    let rustemon_client = rustemon::client::RustemonClient::default();
+    let machine = rustemon::machines::machine::get_by_id(id, &rustemon_client).await;
+    return machine.unwrap();
 }
 
 pub async fn get_pokemon_name(pokemon: pokemon::Pokemon) -> String {
@@ -123,27 +130,14 @@ pub async fn get_front_female_sprite_shiny(pokemon: pokemon::Pokemon) -> Option<
 pub async fn get_pokemon_moves(
     pokemon: pokemon::Pokemon,
 ) -> HashMap<String, HashMap<String, HashSet<(String, String)>>> {
-    let mut moves_by_generation: HashMap<String, HashMap<String, HashSet<(String, String)>>> =
+    let mut moves_by_version_group: HashMap<String, HashMap<String, HashSet<(String, String)>>> =
         HashMap::new();
 
     for move_ in &pokemon.moves {
         for detail in &move_.version_group_details {
             let version_group = &detail.version_group.name;
-            let generation = match version_group.as_str() {
-                "red-blue" | "yellow" => "generation-i",
-                "gold-silver" | "crystal" => "generation-ii",
-                "ruby-sapphire" | "emerald" | "firered-leafgreen" => "generation-iii",
-                "diamond-pearl" | "platinum" | "heartgold-soulsilver" => "generation-iv",
-                "black-white" | "black-2-white-2" => "generation-v",
-                "x-y" | "omega-ruby-alpha-sapphire" => "generation-vi",
-                "sun-moon" | "ultra-sun-ultra-moon" => "generation-vii",
-                "lets-go" | "sword-shield" => "generation-viii",
-                "scarlet-violet" => "generation-ix",
-                _ => "unknown",
-            }
-            .to_string();
 
-            let generation_moves = moves_by_generation.entry(generation).or_insert_with(|| {
+            let version_group_moves = moves_by_version_group.entry(version_group.to_string()).or_insert_with(|| {
                 let mut methods: HashMap<String, HashSet<(String, String)>> = HashMap::new();
                 methods.insert("level-up".to_string(), HashSet::new());
                 methods.insert("machine".to_string(), HashSet::new());
@@ -153,19 +147,13 @@ pub async fn get_pokemon_moves(
             });
 
             let method = &detail.move_learn_method.name;
-            if let Some(moves) = generation_moves.get_mut(method) {
+            if let Some(moves) = version_group_moves.get_mut(method) {
                 if method == "level-up" {
                     moves.insert((
                         move_.move_.name.to_string(),
                         detail.level_learned_at.to_string(),
                     ));
                 } else if method == "machine" {
-                    let move_data = get_move_by_name(move_
-                        .move_
-                        .name
-                        .to_string())
-                        .await;
-                    //println!("{}",move_data.name);
                     moves.insert((move_.move_.name.to_string(), "".to_string()));
                 } else {
                     moves.insert((move_.move_.name.to_string(), "".to_string()));
@@ -173,8 +161,7 @@ pub async fn get_pokemon_moves(
             }
         }
     }
-
-    moves_by_generation
+    moves_by_version_group
 }
 
 pub async fn get_evs(pokemon: pokemon::Pokemon) -> Vec<String> {
@@ -194,4 +181,28 @@ pub async fn get_evolution_chain_id(mut evo_chain: ApiResource<EvolutionChain>) 
     let evo_chain_id = evo_chain.url.split_off(42).replace("/", "").parse();
     let evo_chain_id: i64 = evo_chain_id.unwrap();
     return evo_chain_id;
+}
+pub async fn get_machine_name(mut moves: HashMap<String, HashMap<String, HashSet<(String, String)>>>) -> HashMap<String, HashMap<String, HashSet<(String, String)>>> {
+    for version_group in moves.keys().cloned().collect::<Vec<String>>() {
+        if let Some(machine_moves) = moves.get_mut(&version_group) {
+            if let Some(moves) = machine_moves.get_mut("machine") {
+                let move_names = moves.drain().collect::<Vec<(String, String)>>();
+                for (move_name, _) in move_names {
+                    let mut move_data = get_move_by_name(move_name.to_string()).await;
+                    for machine in &mut move_data.machines {
+                        if machine.version_group.name == version_group {
+                            let machine_id = machine.machine.url.split_off(34).replace("/", "").parse::<i64>().unwrap();
+                            let machine_data = get_machine_by_id(machine_id).await;
+                            let machine_name = machine_data.item.name;
+                            println!("{}: {}", move_name, machine_name);
+                            // Insert the tuple back with the new machine_name
+                            moves.insert((move_name, machine_name));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    moves
 }
