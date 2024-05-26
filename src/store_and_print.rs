@@ -1,8 +1,8 @@
 use crate::pokemon_data::PokemonData;
 use csv::Writer;
+use serde_json;
 use std::collections::HashSet;
 use std::fs::OpenOptions;
-use serde_json;
 use std::io::Write; // Import the std::io::Write trait
 
 fn get_moves_by_generation_and_type<'a>(
@@ -92,7 +92,10 @@ pub fn print_data(pokemon_data: &PokemonData) {
         pokemon_data.name, pokemon_data.has_female_form
     );
     println!("");
-    println!("The evolution chain ID of {} is: {:?}", pokemon_data.name, pokemon_data.evolution_chain_id);
+    println!(
+        "The evolution chain ID of {} is: {:?}",
+        pokemon_data.name, pokemon_data.evolution_chain_id
+    );
     println!("");
     println!(
         "The generation-i egg moves of {} are: {:?}",
@@ -602,8 +605,6 @@ pub fn write_pokemon_data_json(pokemon_data: &PokemonData) {
     let mut writer = std::io::BufWriter::new(file);
     let formatted_json = serde_json::to_string_pretty(&json).unwrap();
     writer.write_all(formatted_json.as_bytes()).unwrap();
-
-
 
     println!("Pokemon data written to JSON file successfully.");
     println!("------------------------------------------------------------");

@@ -1,6 +1,6 @@
+use rustemon::model::evolution::EvolutionChain;
 use rustemon::model::pokemon;
 use rustemon::model::pokemon::PokemonSpecies;
-use rustemon::model::evolution::EvolutionChain;
 use rustemon::model::resource::ApiResource;
 use rustemon::pokemon::pokemon::get_by_id;
 use std::collections::HashMap;
@@ -174,11 +174,11 @@ pub async fn get_evs(pokemon: pokemon::Pokemon) -> Vec<String> {
     return evs;
 }
 
-pub fn get_evolution_chain(species : PokemonSpecies) -> ApiResource<EvolutionChain> {
+pub fn get_evolution_chain(species: PokemonSpecies) -> ApiResource<EvolutionChain> {
     species.evolution_chain.unwrap()
 }
 
-pub async fn get_evolution_chain_id(mut evo_chain : ApiResource<EvolutionChain>) -> i64 {
+pub async fn get_evolution_chain_id(mut evo_chain: ApiResource<EvolutionChain>) -> i64 {
     let evo_chain_id = evo_chain.url.split_off(42).replace("/", "").parse();
     let evo_chain_id: i64 = evo_chain_id.unwrap();
     return evo_chain_id;
