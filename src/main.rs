@@ -48,8 +48,8 @@ fn get_data(id: i64) -> PokemonData {
         let evolution_chain_id = get_evolution_chain_id(evolution_chain.clone()).await;
 
         let moves = get_pokemon_data_functions::get_machine_name(moves.clone()).await;
-        println!("{:?}", moves.get_key_value("red-blue"));
-        println!("{:?}", moves.get_key_value("yellow"));
+        // println!("{:?}", moves.get_key_value("red-blue"));
+        // println!("{:?}", moves.get_key_value("yellow"));
 
         return PokemonData {
             id: id,
