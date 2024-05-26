@@ -42,7 +42,7 @@ fn get_data(id: i64) -> PokemonData {
         {
             has_pokemon_female_form = false;
         }
-        let moves = get_pokemon_data_functions::get_pokemon_moves(pokemon.clone());
+        let moves = get_pokemon_data_functions::get_pokemon_moves(pokemon.clone()).await;
         let evs = get_evs(pokemon.clone()).await;
         let evolution_chain = get_evolution_chain(pokemon_species.clone());
         let evolution_chain_id = get_evolution_chain_id(evolution_chain.clone()).await;

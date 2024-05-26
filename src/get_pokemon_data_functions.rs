@@ -3,6 +3,7 @@ use rustemon::model::pokemon;
 use rustemon::model::pokemon::PokemonSpecies;
 use rustemon::model::resource::ApiResource;
 use rustemon::pokemon::pokemon::get_by_id;
+use rustemon::model::moves::Move;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -16,6 +17,12 @@ pub async fn get_pokemon_by_id(id: i64) -> pokemon::Pokemon {
     let rustemon_client = rustemon::client::RustemonClient::default();
     let pokemon = get_by_id(id, &rustemon_client).await;
     return pokemon.unwrap();
+}
+
+async fn get_move_by_name(name: String) -> Move {
+    let rustemon_client = rustemon::client::RustemonClient::default();
+    let move_ = rustemon::moves::move_::get_by_name(&name, &rustemon_client).await;
+    return move_.unwrap();
 }
 
 pub async fn get_pokemon_name(pokemon: pokemon::Pokemon) -> String {
@@ -113,7 +120,7 @@ pub async fn get_front_female_sprite_shiny(pokemon: pokemon::Pokemon) -> Option<
     return front_female_sprite_shiny;
 }
 
-pub fn get_pokemon_moves(
+pub async fn get_pokemon_moves(
     pokemon: pokemon::Pokemon,
 ) -> HashMap<String, HashMap<String, HashSet<(String, String)>>> {
     let mut moves_by_generation: HashMap<String, HashMap<String, HashSet<(String, String)>>> =
@@ -153,7 +160,12 @@ pub fn get_pokemon_moves(
                         detail.level_learned_at.to_string(),
                     ));
                 } else if method == "machine" {
-                    let move_id = detail.move_learn_method.url.split("/").last().unwrap();
+                    let move_data = get_move_by_name(move_
+                        .move_
+                        .name
+                        .to_string())
+                        .await;
+                    //println!("{}",move_data.name);
                     moves.insert((move_.move_.name.to_string(), "".to_string()));
                 } else {
                     moves.insert((move_.move_.name.to_string(), "".to_string()));
