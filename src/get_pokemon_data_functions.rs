@@ -184,35 +184,3 @@ pub async fn get_evolution_chain_id(mut evo_chain: ApiResource<EvolutionChain>) 
     let evo_chain_id: i64 = evo_chain_id.unwrap();
     return evo_chain_id;
 }
-pub async fn get_machine_name(
-    mut moves: HashMap<String, HashMap<String, HashSet<(String, String)>>>,
-) -> HashMap<String, HashMap<String, HashSet<(String, String)>>> {
-    for version_group in moves.keys().cloned().collect::<Vec<String>>() {
-        if let Some(machine_moves) = moves.get_mut(&version_group) {
-            if let Some(moves) = machine_moves.get_mut("machine") {
-                let move_names = moves.drain().collect::<Vec<(String, String)>>();
-                for (move_name, _) in move_names {
-                    let mut move_data = get_move_by_name(move_name.to_string()).await;
-                    for machine in &mut move_data.machines {
-                        if machine.version_group.name == version_group {
-                            let machine_id = machine
-                                .machine
-                                .url
-                                .split_off(34)
-                                .replace("/", "")
-                                .parse::<i64>()
-                                .unwrap();
-                            let machine_data = get_machine_by_id(machine_id).await;
-                            let machine_name = machine_data.item.name;
-                            //println!("{}: {}", move_name, machine_name);
-                            // Insert the tuple back with the new machine_name
-                            moves.insert((move_name, machine_name));
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    moves
-}
