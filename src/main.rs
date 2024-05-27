@@ -106,6 +106,8 @@ fn main() {
             get_all_moves::main();
         } else if arg == "--get_all_machines" {
             get_all_machines::main();
+        } else if arg == "--make_move_name_id_index" {
+            get_all_moves::make_name_id_index();
         }
     }
     if no_pokemon == false {
