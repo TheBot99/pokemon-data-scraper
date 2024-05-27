@@ -1,5 +1,6 @@
 mod get_pokemon_data_functions;
 mod get_all_moves;
+mod get_all_machines;
 use get_pokemon_data_functions::{
     get_abilities, get_base_stats, get_evolution_chain, get_evolution_chain_id, get_evs,
     get_front_female_sprite_default, get_front_female_sprite_shiny, get_front_sprite_default,
@@ -103,6 +104,8 @@ fn main() {
             no_pokemon = true;
         } else if arg == "--get_all_moves" {
             get_all_moves::main();
+        } else if arg == "--get_all_machines" {
+            get_all_machines::main();
         }
     }
     if no_pokemon == false {

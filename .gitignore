@@ -3,5 +3,6 @@
 /pokemon_csv/*
 /pokemon_json/*
 /moves_json/*
+/machines_json/*
 /.idx
 /.vscode
