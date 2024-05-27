@@ -1,4 +1,5 @@
 mod get_pokemon_data_functions;
+mod get_all_moves;
 use get_pokemon_data_functions::{
     get_abilities, get_base_stats, get_evolution_chain, get_evolution_chain_id, get_evs,
     get_front_female_sprite_default, get_front_female_sprite_shiny, get_front_sprite_default,
@@ -11,7 +12,7 @@ use tokio;
 mod pokemon_data;
 use pokemon_data::PokemonData;
 
-fn get_data(id: i64) -> PokemonData {
+fn get_pokemon_data(id: i64) -> PokemonData {
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(4)
         .enable_all()
@@ -79,6 +80,7 @@ fn main() {
     let mut id: i64 = 1;
     let mut max_id: i64 = 1025;
     let mut verbose: bool = false;
+    let mut no_pokemon = false;
 
     for (index, arg) in args.iter().enumerate() {
         if arg == "--min" {
@@ -97,17 +99,22 @@ fn main() {
             store_and_print::flush_json_dir();
         } else if arg == "--flush_csv_dir" {
             store_and_print::flush_csv_dir();
+        } else if arg == "--no_pokemon" {
+            no_pokemon = true;
+        } else if arg == "--get_all_moves" {
+            get_all_moves::main();
         }
     }
-
-    while id <= max_id {
-        let pokemon_data = get_data(id);
-        store_and_print::initiate_new_csv_file(&pokemon_data);
-        store_and_print::write_pokemon_data_csv(&pokemon_data);
-        store_and_print::write_pokemon_data_json(&pokemon_data);
-        if verbose {
-            store_and_print::print_data(&pokemon_data);
+    if no_pokemon == false {
+        while id <= max_id {
+            let pokemon_data = get_pokemon_data(id);
+            store_and_print::initiate_new_csv_file(&pokemon_data);
+            store_and_print::write_pokemon_data_csv(&pokemon_data);
+            store_and_print::write_pokemon_data_json(&pokemon_data);
+            if verbose {
+                store_and_print::print_data(&pokemon_data);
+            }
+            id += 1;
         }
-        id += 1;
     }
 }
