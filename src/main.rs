@@ -32,7 +32,7 @@ fn get_pokemon_data(id: i64) -> PokemonData {
         let pokemon_types = get_types(pokemon.clone()).await;
         let pokemon_base_stats = get_base_stats(pokemon.clone()).await;
         let pokemon_front_sprite_default = get_front_sprite_default(pokemon.clone()).await;
-        let pokemon_front_sprite_shiny = get_front_sprite_shiny(pokemon.clone()).await;
+        let pokemon_front_sprite_shiny = get_front_sprite_shiny(pokemon.clone()).await.unwrap_or_default();
         let pokemon_front_female_sprite_default =
             get_front_female_sprite_default(pokemon.clone()).await;
         let pokemon_front_female_sprite_shiny =
@@ -61,7 +61,7 @@ fn get_pokemon_data(id: i64) -> PokemonData {
             base_stats: pokemon_base_stats,
             front_sprite_default: pokemon_front_sprite_default
                 .expect("No front sprite default found."),
-            front_sprite_shiny: pokemon_front_sprite_shiny.expect("No front sprite shiny found."),
+            front_sprite_shiny: pokemon_front_sprite_shiny,
             front_female_sprite_default: pokemon_front_female_sprite_default
                 .expect("No front female sprite default found."),
             front_female_sprite_shiny: pokemon_front_female_sprite_shiny
@@ -75,7 +75,7 @@ fn get_pokemon_data(id: i64) -> PokemonData {
 }
 
 fn main() {
-    //print!("{esc}c", esc = 27 as char);
+    print!("{esc}c", esc = 27 as char);
     let args: Vec<String> = env::args().collect();
     let mut id: i64 = 1;
     let mut max_id: i64 = 1025;

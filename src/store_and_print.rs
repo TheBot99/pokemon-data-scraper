@@ -387,9 +387,8 @@ pub fn write_pokemon_data_json(pokemon_data: &PokemonData) {
     });
 
     let mut writer = std::io::BufWriter::new(file);
-    let formatted_json = serde_json::to_string_pretty(&json).unwrap();
-    writer.write_all(formatted_json.as_bytes()).unwrap();
-
+    let json_string = serde_json::to_string(&json).unwrap();
+    writer.write_all(json_string.as_bytes()).unwrap();
     println!("Pokemon data written to JSON file successfully.");
     println!("------------------------------------------------------------");
 }
