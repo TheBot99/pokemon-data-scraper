@@ -100,7 +100,7 @@ pub fn print_data(pokemon_data: &PokemonData) {
 }
 
 pub fn initiate_new_csv_file(pokemon_data: &PokemonData) {
-    let mut writer = Writer::from_path(&format!("pokemon_csv/{}.csv", pokemon_data.name)).unwrap();
+    let mut writer = Writer::from_path(&format!("pokemon_csv/{}.csv", pokemon_data.id)).unwrap();
     let _ = writer.write_record(&[
         "id",
         "name",
@@ -176,7 +176,7 @@ pub fn write_pokemon_data_csv(pokemon_data: &PokemonData) {
     let file = OpenOptions::new()
         .write(true)
         .append(true)
-        .open(&format!("pokemon_csv/{}.csv", pokemon_data.name))
+        .open(&format!("pokemon_csv/{}.csv", pokemon_data.id))
         .unwrap();
 
     let binding = "".to_string();
@@ -364,7 +364,7 @@ pub fn write_pokemon_data_json(pokemon_data: &PokemonData) {
     let file = OpenOptions::new()
         .write(true)
         .create(true)
-        .open(&format!("pokemon_json/{}.json", pokemon_data.name))
+        .open(&format!("pokemon_json/{}.json", pokemon_data.id))
         .unwrap();
 
     let json = serde_json::json!({

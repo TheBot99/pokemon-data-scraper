@@ -1,6 +1,7 @@
 mod get_all_machines;
 mod get_all_moves;
 mod get_pokemon_data_functions;
+mod make_basic_json;
 use get_pokemon_data_functions::{
     get_abilities, get_base_stats, get_evolution_chain, get_evolution_chain_id, get_evs,
     get_front_female_sprite_default, get_front_female_sprite_shiny, get_front_sprite_default,
@@ -114,6 +115,8 @@ fn main() {
             get_all_moves::flush_moves_json_dir();
         } else if arg == "--flush_machines_json_dir" {
             get_all_machines::flush_machines_json_dir();
+        } else if arg == "--make_basic_json_doc" {
+            make_basic_json::create_big_json();
         }
     }
     if no_pokemon == false {
