@@ -1,6 +1,6 @@
-mod get_pokemon_data_functions;
-mod get_all_moves;
 mod get_all_machines;
+mod get_all_moves;
+mod get_pokemon_data_functions;
 use get_pokemon_data_functions::{
     get_abilities, get_base_stats, get_evolution_chain, get_evolution_chain_id, get_evs,
     get_front_female_sprite_default, get_front_female_sprite_shiny, get_front_sprite_default,
@@ -33,7 +33,9 @@ fn get_pokemon_data(id: i64) -> PokemonData {
         let pokemon_types = get_types(pokemon.clone()).await;
         let pokemon_base_stats = get_base_stats(pokemon.clone()).await;
         let pokemon_front_sprite_default = get_front_sprite_default(pokemon.clone()).await;
-        let pokemon_front_sprite_shiny = get_front_sprite_shiny(pokemon.clone()).await.unwrap_or_default();
+        let pokemon_front_sprite_shiny = get_front_sprite_shiny(pokemon.clone())
+            .await
+            .unwrap_or_default();
         let pokemon_front_female_sprite_default =
             get_front_female_sprite_default(pokemon.clone()).await;
         let pokemon_front_female_sprite_shiny =
@@ -48,7 +50,6 @@ fn get_pokemon_data(id: i64) -> PokemonData {
         let evs = get_evs(pokemon.clone()).await;
         let evolution_chain = get_evolution_chain(pokemon_species.clone());
         let evolution_chain_id = get_evolution_chain_id(evolution_chain.clone()).await;
-
 
         return PokemonData {
             id: id,
@@ -104,10 +105,15 @@ fn main() {
             no_pokemon = true;
         } else if arg == "--get_all_moves" {
             get_all_moves::main();
+            get_all_moves::reformat_json_moves();
         } else if arg == "--get_all_machines" {
             get_all_machines::main();
         } else if arg == "--make_move_name_id_index" {
             get_all_moves::make_name_id_index();
+        } else if arg == "--flush_moves_json_dir" {
+            get_all_moves::flush_moves_json_dir();
+        } else if arg == "--flush_machines_json_dir" {
+            get_all_machines::flush_machines_json_dir();
         }
     }
     if no_pokemon == false {

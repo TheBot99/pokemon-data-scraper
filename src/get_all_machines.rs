@@ -1,7 +1,7 @@
-use std::fs::File;
-use std::io::Write;
 use reqwest::Error;
 use serde_json::Value;
+use std::fs::File;
+use std::io::Write;
 
 #[tokio::main]
 pub async fn main() -> Result<(), Error> {
@@ -13,7 +13,7 @@ pub async fn main() -> Result<(), Error> {
     let max_id = 1688;
 
     while id <= max_id {
-    // URL to fetch data from
+        // URL to fetch data from
         let url = format!("https://pokeapi.co/api/v2/machine/{}/", id);
 
         // Send GET request
@@ -35,4 +35,9 @@ pub async fn main() -> Result<(), Error> {
     println!("Data for all machines fetched successfully.");
     println!("------------------------------------------------------------");
     Ok(())
+}
+
+pub fn flush_machines_json_dir() {
+    let _ = std::fs::remove_dir_all("machines_json");
+    let _ = std::fs::create_dir("machines_json");
 }
